@@ -43,7 +43,7 @@ def fetch_car_data_with_scores(mode, items=None, raw_weight_price=0, raw_weight_
     print(f'{mode} is the mode')
 
     # Connect to the database
-    con = sqlite3.connect("/Users/josephstaroverov/PycharmProjects/RunWebScraper/Scraper.db")
+    con = sqlite3.connect("Scraper.db")
     con.execute('PRAGMA journal_mode=WAL;')
     cur = con.cursor()
     results = None

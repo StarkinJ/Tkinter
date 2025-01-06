@@ -26,7 +26,7 @@ def initialization(search):
     find_category_keyword = search_keywords[0]
 
     # Connect to the database
-    con = sqlite3.connect("/Users/josephstaroverov/PycharmProjects/RunWebScraper/Scraper.db")
+    con = sqlite3.connect("Scraper.db")
     con.execute('PRAGMA journal_mode=WAL;')
     cur = con.cursor()
 
@@ -204,7 +204,7 @@ def add_data_to_sql(brand_list, model_list, year_list, price_list, miles_list, L
     print('add data to sql started')
     print(is_car)
 
-    con = sqlite3.connect("/Users/josephstaroverov/PycharmProjects/RunWebScraper/Scraper.db")
+    con = sqlite3.connect("Scraper.db")
     con.execute('PRAGMA journal_mode=WAL;')
     cur = con.cursor()
 

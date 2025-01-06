@@ -11,6 +11,7 @@ from Scraper import Scoring
 import random
 from Scraper import Email
 import pyautogui
+import os
 
 
 class SleepPrevention:
@@ -200,7 +201,7 @@ class LoginFrame(ttk.Frame):
             CustomMessageBox(self, "Login Error", "Please enter both username and password.")
             return
 
-        con = sqlite3.connect("/Users/josephstaroverov/PycharmProjects/RunWebScraper/Scraper.db")
+        con = sqlite3.connect("Scraper.db")
         con.execute('PRAGMA journal_mode=WAL;')
         cur = con.cursor()
         cur.execute("SELECT * FROM users WHERE username = ?", (username,))
@@ -287,7 +288,7 @@ class SignUpPage(ttk.Frame):
 
         password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
-        con = sqlite3.connect("/Users/josephstaroverov/PycharmProjects/RunWebScraper/Scraper.db")
+        con = sqlite3.connect("Scraper.db")
         con.execute('PRAGMA journal_mode=WAL;')
         cur = con.cursor()
         cur.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", (username, email, password_hash))
@@ -432,7 +433,7 @@ class DashboardFrame(ttk.Frame):
             item = self.scrape_entry.get().split()[0] if " " in self.scrape_entry.get() \
                 else self.scrape_entry.get()
 
-            con = sqlite3.connect("/Users/josephstaroverov/PycharmProjects/RunWebScraper/Scraper.db")
+            con = sqlite3.connect("Scraper.db")
             con.execute('PRAGMA journal_mode=WAL;')
             cur = con.cursor()
 
@@ -543,7 +544,7 @@ class DashboardFrame(ttk.Frame):
             return
 
         # Connect to the database
-        con = sqlite3.connect("/Users/josephstaroverov/PycharmProjects/RunWebScraper/Scraper.db")
+        con = sqlite3.connect("Scraper.db")
         con.execute('PRAGMA journal_mode=WAL;')
         cur = con.cursor()
 
@@ -802,7 +803,7 @@ class DashboardFrame(ttk.Frame):
             brand = self.car_scrape_entry.get().split()[0] if " " in self.car_scrape_entry.get() \
                 else self.car_scrape_entry.get()
 
-            con = sqlite3.connect("/Users/josephstaroverov/PycharmProjects/RunWebScraper/Scraper.db")
+            con = sqlite3.connect("Scraper.db")
             con.execute('PRAGMA journal_mode=WAL;')
             cur = con.cursor()
             brand_lowered = brand.lower()
@@ -853,7 +854,7 @@ class DashboardFrame(ttk.Frame):
         category_dropdown.pack(fill="x", padx=10)
 
         # Populate dropdown with existing categories
-        con = sqlite3.connect("/Users/josephstaroverov/PycharmProjects/RunWebScraper/Scraper.db")
+        con = sqlite3.connect("Scraper.db")
         con.execute('PRAGMA journal_mode=WAL;')
         cur = con.cursor()
         cur.execute("SELECT name FROM categories")
@@ -878,7 +879,7 @@ class DashboardFrame(ttk.Frame):
             # Add new category if provided
             if new_category and new_category not in categories:
                 try:
-                    con = sqlite3.connect("/Users/josephstaroverov/PycharmProjects/RunWebScraper/Scraper.db")
+                    con = sqlite3.connect("Scraper.db")
                     con.execute('PRAGMA journal_mode=WAL;')
                     cur = con.cursor()
                     cur.execute("INSERT INTO categories (name) VALUES (?)", (new_category,))
@@ -893,7 +894,7 @@ class DashboardFrame(ttk.Frame):
 
             # Add item to the database
             try:
-                con = sqlite3.connect("/Users/josephstaroverov/PycharmProjects/RunWebScraper/Scraper.db")
+                con = sqlite3.connect("Scraper.db")
                 con.execute('PRAGMA journal_mode=WAL;')
                 cur = con.cursor()
                 cur.execute("SELECT id FROM categories WHERE name = ?", (selected_category,))
@@ -1090,7 +1091,7 @@ class DashboardFrame(ttk.Frame):
             return
 
         # Connect to the database
-        con = sqlite3.connect("/Users/josephstaroverov/PycharmProjects/RunWebScraper/Scraper.db")
+        con = sqlite3.connect("Scraper.db")
         con.execute('PRAGMA journal_mode=WAL;')
         cur = con.cursor()
 
@@ -1246,6 +1247,83 @@ class ItemForm:
 
 
 if __name__ == "__main__":
+    db_file = 'Scraper.db'
+    if os.path.exists(db_file):
+        print('path exists')
+    else:
+        print('path does not exist')
+
+        conn = sqlite3.connect(db_file)
+        cursor = conn.cursor()
+        # Create the 'Items' table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS Items (
+                item_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                Link TEXT,
+                date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+            );
+        ''')
+
+        # Create the 'CarDetails' table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS CarDetails (
+                car_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_id INTEGER,  -- Foreign key referencing Items table
+                make TEXT NOT NULL,  -- e.g., Honda, Toyota
+                model TEXT NOT NULL, -- e.g., Civic, Camry
+                year INTEGER NOT NULL,  -- Car's manufacturing year
+                price REAL NOT NULL,
+                miles REAL,
+                date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+                FOREIGN KEY (item_id) REFERENCES Items(item_id)
+            );
+        ''')
+
+        # Create the 'ItemDetails' table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS ItemDetails (
+                detail_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_id INTEGER,  -- Foreign key referencing Items table
+                category TEXT NOT NULL, -- e.g., electronics, furniture
+                price REAL NOT NULL,
+                description TEXT,
+                date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+                FOREIGN KEY (item_id) REFERENCES Items(item_id)
+            );
+        ''')
+
+        # Create the 'Users' table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                email TEXT NOT NULL UNIQUE,
+                password TEXT NOT NULL,
+                UNIQUE (username)
+            );
+        ''')
+
+        # Create the 'Categories' table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL
+            );
+        ''')
+
+        # Create the 'Items_in_Categories' table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS items_in_categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL,
+                category_id INTEGER NOT NULL,
+                FOREIGN KEY (category_id) REFERENCES categories(id)
+            );
+        ''')
+
+        conn.commit()
+        conn.close()
     app = MyApp()
     app.mainloop()
 
